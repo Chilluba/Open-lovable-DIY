@@ -2,15 +2,12 @@ import { Pool } from 'pg';
 
 // Check if DATABASE_URL is available
 if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is not set');
+  throw new Error('DATABASE_URL environment variable is not set. Please check your .env file.');
 }
 
 // Create a connection pool for better performance
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  },
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
   connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
