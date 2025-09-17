@@ -7,17 +7,17 @@ import { z } from 'zod';
 import type { FileManifest } from '@/types/file-manifest';
 
 const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: process.env.GROQ_API_KEY || '',
 });
 
 const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
   baseURL: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1',
 });
 
 const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL,
+  apiKey: process.env.OPENAI_API_KEY || '',
+  baseURL: process.env.OPENAI_BASE_URL || '',
 });
 
 // Schema for the AI's search plan - not file selection!
@@ -62,6 +62,18 @@ export async function POST(request: NextRequest) {
         error: 'prompt and manifest are required'
       }, { status: 400 });
     }
+
+    // Check if we have any AI provider API keys
+    const hasGroqKey = !!process.env.GROQ_API_KEY;
+    const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
+    const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+
+    if (!hasGroqKey && !hasAnthropicKey && !hasOpenAIKey) {
+      return NextResponse.json({
+        success: false,
+        error: 'No AI provider API keys configured. Please add GROQ_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY to your environment variables or via the settings page.'
+      }, { status: 400 });
+    }
     
     // Create a summary of available files for the AI
     const validFiles = Object.entries(manifest.files as Record<string, any>)
@@ -92,19 +104,38 @@ export async function POST(request: NextRequest) {
     console.log('[analyze-edit-intent] Analyzing prompt:', prompt);
     console.log('[analyze-edit-intent] File summary preview:', fileSummary.split('\n').slice(0, 5).join('\n'));
     
-    // Select the appropriate AI model based on the request
+    // Select the appropriate AI model based on the request and available keys
     let aiModel: LanguageModel;
-    if (model.startsWith('anthropic/')) {
+    if (model.startsWith('anthropic/') && hasAnthropicKey) {
       aiModel = anthropic(model.replace('anthropic/', ''));
     } else if (model.startsWith('openai/')) {
-      if (model.includes('gpt-oss')) {
+      if (model.includes('gpt-oss') && hasGroqKey) {
         aiModel = groq(model);
-      } else {
+      } else if (hasOpenAIKey) {
         aiModel = openai(model.replace('openai/', ''));
+      } else if (hasGroqKey) {
+        // Fallback to Groq if OpenAI key not available
+        aiModel = groq('llama3-8b-8192');
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: 'No suitable AI provider available for the requested model'
+        }, { status: 400 });
       }
     } else {
       // Default to groq if model format is unclear
-      aiModel = groq(model);
+      if (hasGroqKey) {
+        aiModel = groq(model);
+      } else if (hasAnthropicKey) {
+        aiModel = anthropic('claude-3-haiku-20240307');
+      } else if (hasOpenAIKey) {
+        aiModel = openai('gpt-3.5-turbo');
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: 'No AI provider API keys available'
+        }, { status: 400 });
+      }
     }
     
     console.log('[analyze-edit-intent] Using AI model:', model);

@@ -24,12 +24,12 @@ export async function POST(request: NextRequest) {
     // Get E2B API key from headers, body, or environment
     const apiKeysFromHeaders = getAllApiKeysFromHeaders(request);
     const apiKeysFromBody = getAllApiKeysFromBody(body);
-    const E2B_API_KEY = apiKeysFromHeaders.e2b || apiKeysFromBody.e2b;
+    const E2B_API_KEY = apiKeysFromHeaders.e2b || apiKeysFromBody.e2b || process.env.E2B_API_KEY;
 
     if (!E2B_API_KEY) {
       return NextResponse.json({
         success: false,
-        error: 'E2B API key is required. Please provide it in the request headers or configure it in your environment.'
+        error: 'E2B API key is required. Please provide it in the request headers, configure it in your environment, or add it via the settings page.'
       }, { status: 400 });
     }
     

@@ -151,9 +151,11 @@ Open [http://localhost:3000](http://localhost:3000) and start creating! 🎉
 
 ## 🌐 Deployment on Vercel
 
-### Automatic Deployment
+### ⚡ One-Click Deploy (Recommended)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/zainulabedeen123/Open-lovable-DIY)
+
+**The app now deploys successfully without any configuration!** 🎉
 
 ### Manual Deployment
 
@@ -161,31 +163,64 @@ Open [http://localhost:3000](http://localhost:3000) and start creating! 🎉
 2. **Connect to Vercel**:
    - Go to [vercel.com](https://vercel.com)
    - Import your forked repository
-3. **Configure Environment Variables**:
-   - Add all required API keys in Vercel dashboard
-   - Go to Project Settings → Environment Variables
-4. **Custom Domain** (optional):
-   - Add `openlovable.diy` in Domains section
-   - Configure DNS records as instructed
-5. **Deploy!** 🚀
+3. **Deploy immediately** - No environment variables required!
+4. **Configure API keys later** via the settings page in the app
+
+### Post-Deployment Configuration
+
+After deployment, you can optionally add API keys for enhanced functionality:
+
+**Via Vercel Dashboard:**
+- Go to Project Settings → Environment Variables
+- Add the keys listed below
+
+**Via App Settings:**
+- Use the settings page in the deployed app
+- Configure API keys through the UI
 
 ### Environment Variables for Production
 
-When deploying to Vercel, you must set the following environment variables in your project's settings.
+**Optional - App works without these!** Add them for enhanced functionality:
 
-#### Required Variables:
-- `E2B_API_KEY`: Your E2B API key.
-- `GROQ_API_KEY`: Your Groq API key.
-- `DATABASE_URL`: Your Neon database connection string.
-- `GOOGLE_CLIENT_ID`: Your Google OAuth client ID.
-- `GOOGLE_CLIENT_SECRET`: Your Google OAuth client secret.
-- `NEXTAUTH_SECRET`: A long, random string used to encrypt sessions.
-- `NEXTAUTH_URL`: The full, public URL of your Vercel deployment (e.g., `https://your-app-name.vercel.app`).
+#### Required for Core Functionality:
+```env
+# Get from https://e2b.dev
+E2B_API_KEY=e2b_your_api_key_here
 
-#### Optional Variables:
-- `OPENAI_API_KEY`: Your OpenAI API key.
-- `ANTHROPIC_API_KEY`: Your Anthropic API key.
-- `GEMINI_API_KEY`: Your Google Gemini API key.
+# Get from https://console.groq.com
+GROQ_API_KEY=gsk_your_groq_key_here
+```
+
+#### Optional for Authentication:
+```env
+# Get from https://console.cloud.google.com
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-your-google-client-secret
+
+# Generate with: openssl rand -base64 32
+NEXTAUTH_SECRET=your_nextauth_secret
+
+# Your production URL
+NEXTAUTH_URL=https://your-app.vercel.app
+```
+
+#### Optional for Database:
+```env
+# Get from https://console.neon.tech
+DATABASE_URL=postgresql://user:password@host:port/dbname?sslmode=require
+```
+
+#### Optional AI Providers:
+```env
+# Get from https://platform.openai.com
+OPENAI_API_KEY=sk-your_openai_key_here
+
+# Get from https://console.anthropic.com
+ANTHROPIC_API_KEY=sk-ant-your_anthropic_key_here
+
+# Get from https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key
+```
 
 ## 📁 Project Structure
 

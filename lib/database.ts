@@ -8,7 +8,8 @@ const getPool = () => {
   }
 
   if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is not set. Please check your .env file.');
+    console.warn('DATABASE_URL environment variable is not set. Database features will be disabled.');
+    return null;
   }
 
   pool = new Pool({
@@ -42,8 +43,14 @@ export class UserDatabase {
     email: string;
     name?: string;
     image?: string;
-  }): Promise<User> {
-    const client = await getPool().connect();
+  }): Promise<User | null> {
+    const pool = getPool();
+    if (!pool) {
+      console.warn('Database not available. User data will not be persisted.');
+      return null;
+    }
+
+    const client = await pool.connect();
     try {
       const query = `
         INSERT INTO users (google_id, email, name, image, created_at, updated_at, last_login, login_count)
@@ -67,6 +74,9 @@ export class UserDatabase {
       ]);
       
       return result.rows[0];
+    } catch (error) {
+      console.error('Error upserting user:', error);
+      return null;
     } finally {
       client.release();
     }
@@ -77,7 +87,13 @@ export class UserDatabase {
     users: User[];
     total: number;
   }> {
-    const client = await getPool().connect();
+    const pool = getPool();
+    if (!pool) {
+      console.warn('Database not available. Returning empty user list.');
+      return { users: [], total: 0 };
+    }
+
+    const client = await pool.connect();
     try {
       // Get total count
       const countQuery = 'SELECT COUNT(*) as total FROM users';
@@ -96,6 +112,9 @@ export class UserDatabase {
         users: usersResult.rows,
         total
       };
+    } catch (error) {
+      console.error('Error getting users:', error);
+      return { users: [], total: 0 };
     } finally {
       client.release();
     }
@@ -103,11 +122,20 @@ export class UserDatabase {
 
   // Get user by Google ID
   static async getUserByGoogleId(googleId: string): Promise<User | null> {
-    const client = await getPool().connect();
+    const pool = getPool();
+    if (!pool) {
+      console.warn('Database not available. Cannot retrieve user.');
+      return null;
+    }
+
+    const client = await pool.connect();
     try {
       const query = 'SELECT * FROM users WHERE google_id = $1';
       const result = await client.query(query, [googleId]);
       return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error getting user by Google ID:', error);
+      return null;
     } finally {
       client.release();
     }
@@ -120,7 +148,18 @@ export class UserDatabase {
     newUsersThisWeek: number;
     newUsersThisMonth: number;
   }> {
-    const client = await getPool().connect();
+    const pool = getPool();
+    if (!pool) {
+      console.warn('Database not available. Returning zero stats.');
+      return {
+        totalUsers: 0,
+        newUsersToday: 0,
+        newUsersThisWeek: 0,
+        newUsersThisMonth: 0
+      };
+    }
+
+    const client = await pool.connect();
     try {
       const query = `
         SELECT 
@@ -139,6 +178,14 @@ export class UserDatabase {
         newUsersThisWeek: parseInt(row.new_week),
         newUsersThisMonth: parseInt(row.new_month)
       };
+    } catch (error) {
+      console.error('Error getting user stats:', error);
+      return {
+        totalUsers: 0,
+        newUsersToday: 0,
+        newUsersThisWeek: 0,
+        newUsersThisMonth: 0
+      };
     } finally {
       client.release();
     }
@@ -147,12 +194,13 @@ export class UserDatabase {
   // Test database connection
   static async testConnection(): Promise<boolean> {
     try {
-      if (!process.env.DATABASE_URL) {
+      const pool = getPool();
+      if (!pool) {
         console.error('DATABASE_URL environment variable is not set');
         return false;
       }
 
-      const client = await getPool().connect();
+      const client = await pool.connect();
       await client.query('SELECT 1');
       client.release();
       console.log('Database connection test successful');
