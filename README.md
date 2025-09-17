@@ -79,25 +79,49 @@ npm install
 
 ### 2. Environment Configuration
 
+Copy the example environment file to `.env.local`. This file will be used for your local development environment.
+
 ```bash
 cp .env.example .env.local
 ```
 
-Add your API keys to `.env.local`:
+Now, open `.env.local` and add your API keys and configuration.
 
+#### Required for Core Functionality:
 ```env
-# REQUIRED - Code execution sandboxes
+# Get from https://e2b.dev
 E2B_API_KEY=e2b_your_api_key_here
 
-# REQUIRED - Web scraping engine
-FIRECRAWL_API_KEY=fc-your_api_key_here
-
-# REQUIRED - AI inference (choose at least one)
+# Get from https://console.groq.com
 GROQ_API_KEY=gsk_your_groq_key_here
 
-# OPTIONAL - Additional AI providers
+# Get from https://console.neon.tech
+DATABASE_URL=postgresql://user:password@host:port/dbname?sslmode=require
+```
+
+#### Required for Google Authentication:
+```env
+# Get from https://console.cloud.google.com
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-your-google-client-secret
+
+# A random string for session encryption. You can generate one with: openssl rand -base64 32
+NEXTAUTH_SECRET=your_nextauth_secret
+
+# For local development, this is usually http://localhost:3000
+NEXTAUTH_URL=http://localhost:3000
+```
+
+#### Optional AI Providers:
+```env
+# Get from https://platform.openai.com
 OPENAI_API_KEY=sk-your_openai_key_here
+
+# Get from https://console.anthropic.com
 ANTHROPIC_API_KEY=sk-ant-your_anthropic_key_here
+
+# Get from https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### 3. Run Development Server
@@ -147,15 +171,21 @@ Open [http://localhost:3000](http://localhost:3000) and start creating! 🎉
 
 ### Environment Variables for Production
 
-In your Vercel dashboard, add these environment variables:
+When deploying to Vercel, you must set the following environment variables in your project's settings.
 
-```
-E2B_API_KEY=your_production_e2b_key
-FIRECRAWL_API_KEY=your_production_firecrawl_key
-GROQ_API_KEY=your_production_groq_key
-OPENAI_API_KEY=your_production_openai_key (optional)
-ANTHROPIC_API_KEY=your_production_anthropic_key (optional)
-```
+#### Required Variables:
+- `E2B_API_KEY`: Your E2B API key.
+- `GROQ_API_KEY`: Your Groq API key.
+- `DATABASE_URL`: Your Neon database connection string.
+- `GOOGLE_CLIENT_ID`: Your Google OAuth client ID.
+- `GOOGLE_CLIENT_SECRET`: Your Google OAuth client secret.
+- `NEXTAUTH_SECRET`: A long, random string used to encrypt sessions.
+- `NEXTAUTH_URL`: The full, public URL of your Vercel deployment (e.g., `https://your-app-name.vercel.app`).
+
+#### Optional Variables:
+- `OPENAI_API_KEY`: Your OpenAI API key.
+- `ANTHROPIC_API_KEY`: Your Anthropic API key.
+- `GEMINI_API_KEY`: Your Google Gemini API key.
 
 ## 📁 Project Structure
 
