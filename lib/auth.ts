@@ -53,4 +53,5 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development',
+  debug: process.env.NODE_ENV === 'development',
 }

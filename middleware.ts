@@ -8,8 +8,8 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // For now, we'll allow access to all routes
-        // You can add specific route protection logic here later
+        // Allow access to all routes for now
+        // Authentication is optional in this app
         return true
       },
     },
