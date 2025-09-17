@@ -1,17 +1,25 @@
 import { Pool } from 'pg';
 
-// Check if DATABASE_URL is available
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set. Please check your .env file.');
-}
+let pool: Pool | null = null;
 
-// Create a connection pool for better performance
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-});
+const getPool = () => {
+  if (pool) {
+    return pool;
+  }
+
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is not set. Please check your .env file.');
+  }
+
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 20, // Maximum number of clients in the pool
+    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+  });
+
+  return pool;
+};
 
 // User interface for TypeScript
 export interface User {
@@ -35,7 +43,7 @@ export class UserDatabase {
     name?: string;
     image?: string;
   }): Promise<User> {
-    const client = await pool.connect();
+    const client = await getPool().connect();
     try {
       const query = `
         INSERT INTO users (google_id, email, name, image, created_at, updated_at, last_login, login_count)
@@ -69,7 +77,7 @@ export class UserDatabase {
     users: User[];
     total: number;
   }> {
-    const client = await pool.connect();
+    const client = await getPool().connect();
     try {
       // Get total count
       const countQuery = 'SELECT COUNT(*) as total FROM users';
@@ -95,7 +103,7 @@ export class UserDatabase {
 
   // Get user by Google ID
   static async getUserByGoogleId(googleId: string): Promise<User | null> {
-    const client = await pool.connect();
+    const client = await getPool().connect();
     try {
       const query = 'SELECT * FROM users WHERE google_id = $1';
       const result = await client.query(query, [googleId]);
@@ -112,7 +120,7 @@ export class UserDatabase {
     newUsersThisWeek: number;
     newUsersThisMonth: number;
   }> {
-    const client = await pool.connect();
+    const client = await getPool().connect();
     try {
       const query = `
         SELECT 
@@ -144,7 +152,7 @@ export class UserDatabase {
         return false;
       }
 
-      const client = await pool.connect();
+      const client = await getPool().connect();
       await client.query('SELECT 1');
       client.release();
       console.log('Database connection test successful');
@@ -157,14 +165,18 @@ export class UserDatabase {
   }
 }
 
-// Export the pool for direct queries if needed
-export { pool };
+// Export the getPool function for direct queries if needed
+export { getPool };
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  pool.end();
+  if (pool) {
+    pool.end();
+  }
 });
 
 process.on('SIGTERM', () => {
-  pool.end();
+  if (pool) {
+    pool.end();
+  }
 });
