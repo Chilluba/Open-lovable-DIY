@@ -79,10 +79,10 @@ npm install
 
 ### 2. Environment Configuration
 
-Copy the example environment file to `.env.local`. This file will be used for your local development environment.
+The repository includes a `.env` file that serves as a template. To set up your local environment, you should first copy this file to a new file named `.env.local`. The `.env.local` file is where your actual secret credentials will be stored and is ignored by git.
 
 ```bash
-cp .env.example .env.local
+cp .env .env.local
 ```
 
 Now, open `.env.local` and add your API keys and configuration.
